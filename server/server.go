@@ -1,6 +1,7 @@
 package server
 
 import (
+	"html/template"
 	"net/http"
 	"time"
 
@@ -78,6 +79,17 @@ func (s *Server) NotFound(handle Handler) {
 		s.router.NotFound = func(w http.ResponseWriter, r *http.Request) {
 			h(w, r, nil)
 		}
+	}
+}
+
+func (s *Server) DefaultRouteFuncs() template.FuncMap {
+	return template.FuncMap{
+		"assets": func(path string) (string, error) {
+			return s.Assets(path), nil
+		},
+		"urlReverse": func(name string, params ...interface{}) (string, error) {
+			return s.Reverse(name, params...), nil
+		},
 	}
 }
 
