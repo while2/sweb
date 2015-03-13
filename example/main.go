@@ -21,7 +21,7 @@ func main() {
 
 	srv.Middleware(server.NewRecoveryWare(true))
 	srv.Middleware(server.NewStatWare())
-	srv.Get("/hello/:name", Hello)
+	srv.Get("/hello/:name", "Hello", Hello)
 
 	log.Fatal(srv.Run(":9000"))
 }

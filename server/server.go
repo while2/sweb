@@ -19,9 +19,12 @@ const (
 
 type Server struct {
 	Context context.Context
-	wares   []Middleware
-	router  *httprouter.Router
-	debug   bool
+
+	wares              []Middleware
+	router             *httprouter.Router
+	extraAssetsMapping map[string]string
+	namedRoutes        map[string]string
+	debug              bool
 }
 
 func (s *Server) Run(addr string) error {
@@ -40,32 +43,33 @@ func (s *Server) Middleware(ware Middleware) {
 	s.wares = append(s.wares, ware)
 }
 
-func (s *Server) Handle(method, path string, handle Handler) {
+func (s *Server) Handle(method, path, name string, handle Handler) {
 	s.router.Handle(method, path, s.hrAdapt(handle))
+	s.namedRoutes[name] = path
 }
 
-func (s *Server) Get(path string, handle Handler) {
-	s.Handle("GET", path, handle)
+func (s *Server) Get(path string, name string, handle Handler) {
+	s.Handle("GET", path, name, handle)
 }
 
-func (s *Server) Post(path string, handle Handler) {
-	s.Handle("POST", path, handle)
+func (s *Server) Post(path string, name string, handle Handler) {
+	s.Handle("POST", path, name, handle)
 }
 
-func (s *Server) Put(path string, handle Handler) {
-	s.Handle("PUT", path, handle)
+func (s *Server) Put(path string, name string, handle Handler) {
+	s.Handle("PUT", path, name, handle)
 }
 
-func (s *Server) Patch(path string, handle Handler) {
-	s.Handle("Patch", path, handle)
+func (s *Server) Patch(path string, name string, handle Handler) {
+	s.Handle("Patch", path, name, handle)
 }
 
-func (s *Server) Head(path string, handle Handler) {
-	s.Handle("HEAD", path, handle)
+func (s *Server) Head(path string, name string, handle Handler) {
+	s.Handle("HEAD", path, name, handle)
 }
 
-func (s *Server) Delete(path string, handle Handler) {
-	s.Handle("DELETE", path, handle)
+func (s *Server) Delete(path string, name string, handle Handler) {
+	s.Handle("DELETE", path, name, handle)
 }
 
 func (s *Server) NotFound(handle Handler) {
@@ -105,10 +109,12 @@ func New(ctx context.Context, isDebug bool) *Server {
 		log.EnableDebug()
 	}
 	srv := &Server{
-		Context: ctx,
-		wares:   []Middleware{},
-		router:  httprouter.New(),
-		debug:   isDebug,
+		Context:            ctx,
+		wares:              []Middleware{},
+		router:             httprouter.New(),
+		extraAssetsMapping: make(map[string]string),
+		namedRoutes:        make(map[string]string),
+		debug:              isDebug,
 	}
 	return srv
 }
