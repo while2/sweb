@@ -11,7 +11,8 @@ import (
 
 func Hello(ctx context.Context, w http.ResponseWriter, request *http.Request) context.Context {
 	name := server.Params(ctx, "name")
-	fmt.Fprintf(w, "Hello, %q", name)
+	userId := ctx.Value("userId").(int)
+	fmt.Fprintf(w, "Hello, %q, userId = %d", name, userId)
 	return ctx
 }
 
