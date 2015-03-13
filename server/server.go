@@ -19,8 +19,7 @@ const (
 )
 
 type Server struct {
-	Context context.Context
-
+	baseCtx            context.Context
 	wares              []Middleware
 	router             *httprouter.Router
 	extraAssetsMapping map[string]string
@@ -100,7 +99,7 @@ func (s *Server) hrAdapt(fn Handler) httprouter.Handle {
 	}
 	handler := buildOnion(append(s.wares, MiddleFn(core)))
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		ctx := s.Context
+		ctx := s.baseCtx
 		if len(params) > 0 {
 			ctx = newContextWithParams(ctx, params)
 		}
@@ -121,7 +120,7 @@ func New(ctx context.Context, isDebug bool) *Server {
 		log.EnableDebug()
 	}
 	srv := &Server{
-		Context:            ctx,
+		baseCtx:            ctx,
 		wares:              []Middleware{},
 		router:             httprouter.New(),
 		extraAssetsMapping: make(map[string]string),
