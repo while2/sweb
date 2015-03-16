@@ -51,7 +51,7 @@ func main() {
 	srv.Middleware(server.NewStatWare())
 	srv.Middleware(&IncrMiddleware{})
 	srv.Get("/hello/:name", "Hello", Hello)
-	srv.Get("/auth/:name", "Hello", AuthHandler(Hello))
+	srv.Get("/auth/:name", "AuthHello", AuthHandler(Hello))
 
 	log.Fatal(srv.Run(":9000"))
 }
