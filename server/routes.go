@@ -13,10 +13,14 @@ const (
 	kAssetsReverseKey = "_!#assets_"
 )
 
+// EnableExtraAssetsMapping can be used to set some extra assets mapping data for server,
+// server would look up this mapping for the frontend assets first when reverse an assets url.
 func (s *Server) EnableExtraAssetsMapping(assetsMapping map[string]string) {
 	s.extraAssetsMapping = assetsMapping
 }
 
+// Reverse would reverse the named routes with params supported. E.g. we have a routes "/hello/:name" named "Hello",
+// then we can call s.Reverse("Hello", "world") gives us "/hello/world"
 func (s *Server) Reverse(name string, params ...interface{}) string {
 	path, ok := s.namedRoutes[name]
 	if !ok {
@@ -43,6 +47,7 @@ func (s *Server) Reverse(name string, params ...interface{}) string {
 	return httprouter.CleanPath("/" + strings.Join(parts, "/"))
 }
 
+// Assets would reverse the assets url, e.g. s.Assets("images/test.png") gives us "/assets/images/test.png"
 func (s *Server) Assets(path string) string {
 	if asset, ok := s.extraAssetsMapping[path]; ok {
 		path = asset
@@ -50,6 +55,7 @@ func (s *Server) Assets(path string) string {
 	return s.Reverse(kAssetsReverseKey, path)
 }
 
+// Files register the static file system or assets to the router
 func (s *Server) Files(path string, root http.FileSystem) {
 	s.router.ServeFiles(path, root)
 	s.namedRoutes[kAssetsReverseKey] = path

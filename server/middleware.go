@@ -11,22 +11,29 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Middleware is an interface defining the middleware for the server, the middleware should call the next handler to pass the
+// request down, or just return a HttpRedirect request and etc.
 type Middleware interface {
 	ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context
 }
 
+// MiddleFn is an adapter to adapt a function to a Middleware interface
 type MiddleFn func(context.Context, http.ResponseWriter, *http.Request, Handler) context.Context
 
+// ServeHTTP adapts the Middleware interface.
 func (m MiddleFn) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context {
 	return m(ctx, w, r, next)
 }
 
+// RecoveryWare is the recovery middleware which can cover the panic situation.
 type RecoveryWare struct {
 	printStack bool
 	stackAll   bool
 	stackSize  int
 }
 
+// ServeHTTP implements the Middleware interface, just recover from the panic. Would provide information on the web page
+// if in debug mode.
 func (m *RecoveryWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context {
 	defer func() {
 		if err := recover(); err != nil {
@@ -43,6 +50,7 @@ func (m *RecoveryWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *
 	return next(ctx, w, r)
 }
 
+// NewRecoveryWare returns a new recovery middleware. Would log the full stack if enable the printStack.
 func NewRecoveryWare(printStack bool) Middleware {
 	return &RecoveryWare{
 		printStack: printStack,
@@ -51,10 +59,12 @@ func NewRecoveryWare(printStack bool) Middleware {
 	}
 }
 
+// StatWare is the statistics middleware which would log all the access and performation information.
 type StatWare struct {
 	ignoredPrefixes []string
 }
 
+// ServeHTTP implements the Middleware interface. Would log all the access, status and performance information.
 func (m *StatWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context {
 	start := time.Now()
 	newCtx := next(ctx, w, r)
@@ -79,6 +89,7 @@ func (m *StatWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http
 	return newCtx
 }
 
+// NewStatWare returns a new StatWare, some ignored urls can be specified with prefixes which would not be logged.
 func NewStatWare(prefixes ...string) Middleware {
 	return &StatWare{prefixes}
 }
