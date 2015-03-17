@@ -1,3 +1,36 @@
+/*
+Package render provides html/templates rendering for the composable templates which can be called a set of templates.
+
+	// we define some layout/desktop.html
+	{{ template "header" .}}
+	{{ template "content" .}}
+
+	// then in the common/header.html, we define
+	{{ define "header" }} ... {{ end }}
+
+	// then we define content inside some index.html
+	{{ define "content" }}<p>Hello {{ .Hello }}</p>{{ end }}
+
+	// we can link those fragments as a render.TemplateSet
+	ts := render.TemplateSet("index", "desktop.html", "common/header.html", "index.html", "layout/desktop.html")
+
+	// New a renderer with some options
+	r := render.New(render.Options{
+		Directory:     "templates",
+		Funcs:         []template.FuncMap{someServer.DefaultRouteFuncs()},
+		Delims:        render.Delims{"{{", "}}"},
+		IndentJson:    true,
+		UseBufPool:    true,
+		IsDevelopment: false,
+	}, []*render.TemplateSet{ts})
+
+	// e.g. render some named templates
+	err := r.Html(w, http.StatusOK, "index", map[string]string{ "Hello": "World" })
+
+	// or we can render some json data
+	err := r.Json(w, http.StatusOK, "Hello World")
+
+*/
 package render
 
 import (
@@ -19,20 +52,34 @@ const (
 	kContentJson    = "application/json"
 )
 
+// Delims defines the deliminator for html/template.
 type Delims struct {
 	Left  string
 	Right string
 }
 
+// Options defines basic options for the renderer.
 type Options struct {
-	Directory     string
-	Funcs         []template.FuncMap
-	Delims        Delims
-	IndentJson    bool
-	UseBufPool    bool
+	// Templates lookup directory
+	Directory string
+
+	// User defined functions passed to the template engine
+	Funcs []template.FuncMap
+
+	// Deliminator for the html/template
+	Delims Delims
+
+	// Should indent json for readable format when call r.Json
+	IndentJson bool
+
+	// Should use the buf pool for the rendering or just use the bytes.Buffer
+	UseBufPool bool
+
+	// In development mode, the templates would be recompiled for each rendering call
 	IsDevelopment bool
 }
 
+// TemplateSet defines a template set for composable template fragments
 type TemplateSet struct {
 	name     string
 	fileList []string
@@ -40,6 +87,8 @@ type TemplateSet struct {
 	template *template.Template
 }
 
+// NewTemplateSet returns a new template set, name provides the name for reverse searching, entry defines the most top
+// template name, like the "layout.html"; have to at least give a template file or multiple template files used in this set.
 func NewTemplateSet(name string, entry string, tFile string, otherFiles ...string) *TemplateSet {
 	fileList := make([]string, 0, 1+len(otherFiles))
 	fileList = append(fileList, tFile)
@@ -53,12 +102,14 @@ func NewTemplateSet(name string, entry string, tFile string, otherFiles ...strin
 	}
 }
 
+// Render defines basic renderer data.
 type Render struct {
 	opt       Options
 	templates map[string]*TemplateSet
 	bufPool   *bpool.BufferPool
 }
 
+// Json renders a object and writes the result and status to http.ResponseWriter
 func (r *Render) Json(w http.ResponseWriter, status int, v interface{}) error {
 	var (
 		data []byte
@@ -79,6 +130,7 @@ func (r *Render) Json(w http.ResponseWriter, status int, v interface{}) error {
 	return err
 }
 
+// Html renders a named template set with given data binding, and writes the result and status to http.ResponseWriter
 func (r *Render) Html(w http.ResponseWriter, status int, name string, binding interface{}) error {
 	if r.opt.IsDevelopment {
 		r.compile()
@@ -110,6 +162,7 @@ func (r *Render) Html(w http.ResponseWriter, status int, name string, binding in
 	}
 }
 
+// compile all the templates
 func (r *Render) compile() {
 	for _, ts := range r.templates {
 		fileList := make([]string, len(ts.fileList))
@@ -126,6 +179,7 @@ func (r *Render) compile() {
 	log.Debugf("Templates have been compiled, count=%d", len(r.templates))
 }
 
+// New a renderer with given template sets and options.
 func New(opt Options, tSets []*TemplateSet) *Render {
 	r := &Render{
 		opt:       opt,
