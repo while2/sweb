@@ -101,6 +101,16 @@ func (s *Server) NotFound(handle Handler) {
 	}
 }
 
+// MethodNotAllowed will register a 405 handler to the router
+func (s *Server) MethodNotAllowed(handle Handler) {
+	if handle != nil {
+		h := s.hrAdapt(handle)
+		s.router.MethodNotAllowed = func(w http.ResponseWriter, r *http.Request) {
+			h(w, r, nil)
+		}
+	}
+}
+
 // DefaultRouteFuncs provides a FuncMap for the renderer includes 'assets' and 'urlReverse'
 // so that you can use those functions inside the templates.
 func (s *Server) DefaultRouteFuncs() template.FuncMap {
