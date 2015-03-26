@@ -18,6 +18,10 @@ var (
 	exitOnFatal = false
 )
 
+func Logger() *log.Logger {
+	return logger
+}
+
 func EnableDebug() {
 	debug = true
 }

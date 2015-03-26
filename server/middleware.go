@@ -51,10 +51,17 @@ func (m *RecoveryWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *
 }
 
 // NewRecoveryWare returns a new recovery middleware. Would log the full stack if enable the printStack.
-func NewRecoveryWare(printStack bool) Middleware {
+func NewRecoveryWare(flags ...bool) Middleware {
+	stackFlags := []bool{false, false}
+	for i := range flags {
+		if i >= len(stackFlags) {
+			break
+		}
+		stackFlags[i] = flags[i]
+	}
 	return &RecoveryWare{
-		printStack: printStack,
-		stackAll:   printStack,
+		printStack: stackFlags[0],
+		stackAll:   stackFlags[1],
 		stackSize:  1024 * 8,
 	}
 }
