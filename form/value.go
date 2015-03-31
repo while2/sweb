@@ -6,6 +6,15 @@ import (
 	"strconv"
 )
 
+// ParamString returns string value from the form or query
+func ParamString(r *http.Request, name string, defaultValue string) string {
+	value := r.FormValue(name)
+	if value == "" {
+		value = defaultValue
+	}
+	return value
+}
+
 // ParamStringOptions will check if the form value is contained in options, otherwise will return the default value.
 func ParamStringOptions(r *http.Request, name string, options []string, defaultValue string) string {
 	value := r.FormValue(name)
