@@ -78,7 +78,7 @@ func (s *Server) Put(path string, name string, handle Handler) {
 
 // Patch will register a 'PATCH' request handler to the router.
 func (s *Server) Patch(path string, name string, handle Handler) {
-	s.Handle("Patch", path, name, handle)
+	s.Handle("PATCH", path, name, handle)
 }
 
 // Head will register a 'HEAD' request handler to the router.
