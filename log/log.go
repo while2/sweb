@@ -30,6 +30,10 @@ func ExitOnFatal() {
 	exitOnFatal = true
 }
 
+func DebugV(v interface{}) {
+	Debugf("%+v", v)
+}
+
 func Debug(v ...interface{}) {
 	if debug {
 		logger.Output(kCallDepth, header("DEBUG", fmt.Sprint(v...)))
