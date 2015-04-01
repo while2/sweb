@@ -23,12 +23,14 @@ type Resource interface {
 	Head(ctx context.Context, r *http.Request) (code int, data interface{})
 }
 
+// RestfulHandlerAdapter will set the server's restful handler adapter
 func (s *Server) RestfulHandlerAdapter(adapter RestfulHandlerAdapter) {
 	if adapter != nil {
 		s.restfulAdapter = adapter
 	}
 }
 
+// AddRestfulResource will register the resource to the path with given routing name
 func (s *Server) AddRestfulResource(path string, name string, resource Resource) {
 	adapter := s.restfulAdapter
 	if adapter == nil {
