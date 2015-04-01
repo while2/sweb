@@ -4,6 +4,7 @@ Package server provides basic wrapping for go web server. Supporting:
   * Named routing and url reversing
   * Middleware supports
   * Server graceful shutdown
+  * Restful resource for json restful api
 */
 package server
 
@@ -34,6 +35,7 @@ type Server struct {
 	router             *httprouter.Router
 	extraAssetsMapping map[string]string
 	namedRoutes        map[string]string
+	restfulAdapter     RestfulHandlerAdapter
 	debug              bool
 }
 
