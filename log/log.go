@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -32,6 +33,13 @@ func ExitOnFatal() {
 
 func DebugV(v interface{}) {
 	Debugf("%+v", v)
+}
+
+func DebugJson(v interface{}) {
+	if debug {
+		data, _ := json.MarshalIndent(v, "", "  ")
+		Debugf("\n%s", string(data))
+	}
 }
 
 func Debug(v ...interface{}) {
