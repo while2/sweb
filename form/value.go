@@ -87,3 +87,14 @@ func ParamJson(r *http.Request, name string, v interface{}) error {
 	value := r.FormValue(name)
 	return json.Unmarshal([]byte(value), v)
 }
+
+// ParamBodyJson returns a json unmarshal result from the request body
+func ParamBodyJson(r *http.Request, v interface{}, closeBody ...bool) error {
+	defer func() {
+		if len(closeBody) == 0 || closeBody[0] {
+			r.Body.Close()
+		}
+	}()
+	decoder := json.NewDecoder(r.Body)
+	return decoder.Decode(v)
+}
