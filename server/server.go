@@ -28,6 +28,17 @@ const (
 	kGracefulTimeout = 10
 )
 
+type Muxer interface {
+	Middleware(ware Middleware)
+	Handle(method, path, name string, handle Handler)
+	Get(path, name string, handle Handler)
+	Post(path, name string, handle Handler)
+	Put(path, name string, handle Handler)
+	Patch(path, name string, handle Handler)
+	Delete(path, name string, handle Handler)
+	Head(path, name string, handle Handler)
+}
+
 // Server is a struct for all kinds of internal data.
 type Server struct {
 	baseCtx            context.Context
