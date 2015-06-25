@@ -1,6 +1,7 @@
 package server
 
 import (
+	"expvar"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mijia/sweb/log"
+	"github.com/paulbellamy/ratecounter"
 	"golang.org/x/net/context"
 )
 
@@ -99,6 +101,70 @@ func (m *StatWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http
 // NewStatWare returns a new StatWare, some ignored urls can be specified with prefixes which would not be logged.
 func NewStatWare(prefixes ...string) Middleware {
 	return &StatWare{prefixes}
+}
+
+// RuntimeWare is the statictics middleware which would collect some basic qps, 4xx, 5xx data information
+type RuntimeWare struct {
+	ignoredUrls []string
+	latency     [20]string
+
+	cQps *ratecounter.RateCounter
+	c4xx *ratecounter.RateCounter
+	c5xx *ratecounter.RateCounter
+
+	hitsQps      *expvar.Int
+	hits4xx      *expvar.Int
+	hits5xx      *expvar.Int
+	hitsServed   *expvar.String
+	numGoroutine *expvar.Int
+}
+
+func (m *RuntimeWare) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context {
+	start := time.Now()
+	newCtx := next(ctx, w, r)
+
+	urlPath := r.URL.Path
+	statusCode := w.(ResponseWriter).Status()
+	if statusCode >= 500 {
+		m.c5xx.Incr(1)
+		m.hits5xx.Set(m.c5xx.Rate())
+	} else if statusCode >= 400 {
+		m.c4xx.Incr(1)
+		m.hits4xx.Set(m.c4xx.Rate())
+	}
+
+	ignoreQps := false
+	for _, prefix := range m.ignoredUrls {
+		if strings.HasPrefix(urlPath, prefix) {
+			ignoreQps = true
+			break
+		}
+	}
+	if !ignoreQps {
+		m.cQps.Incr(1)
+		rate := m.cQps.Rate()
+		m.hitsQps.Set(rate)
+		index := (rate - 1) % int64(len(m.latency))
+		m.latency[int(index)] = time.Since(start).String()
+		m.hitsServed.Set(strings.Join(m.latency[:], ", "))
+	}
+	m.numGoroutine.Set(int64(runtime.NumGoroutine()))
+	return newCtx
+}
+
+func NewRuntimeWare(prefixes []string) Middleware {
+	expvar.NewString("at_server_start").Set(time.Now().Format("2006-01-02 15:04:05"))
+	return &RuntimeWare{
+		ignoredUrls:  prefixes,
+		cQps:         ratecounter.NewRateCounter(time.Minute),
+		c4xx:         ratecounter.NewRateCounter(5 * time.Minute),
+		c5xx:         ratecounter.NewRateCounter(5 * time.Minute),
+		hitsQps:      expvar.NewInt("hits_per_minute"),
+		hits4xx:      expvar.NewInt("hits_4xx_per_5min"),
+		hits5xx:      expvar.NewInt("hits_5xx_per_5min"),
+		hitsServed:   expvar.NewString("latency"),
+		numGoroutine: expvar.NewInt("goroutine_count"),
+	}
 }
 
 type _OnionLayer struct {
