@@ -108,9 +108,9 @@ func (s *Server) Delete(path string, name string, handle Handler) {
 func (s *Server) NotFound(handle Handler) {
 	if handle != nil {
 		h := s.hrAdapt(handle)
-		s.router.NotFound = func(w http.ResponseWriter, r *http.Request) {
+		s.router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h(w, r, nil)
-		}
+		})
 	}
 }
 
@@ -118,9 +118,9 @@ func (s *Server) NotFound(handle Handler) {
 func (s *Server) MethodNotAllowed(handle Handler) {
 	if handle != nil {
 		h := s.hrAdapt(handle)
-		s.router.MethodNotAllowed = func(w http.ResponseWriter, r *http.Request) {
+		s.router.MethodNotAllowed = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h(w, r, nil)
-		}
+		})
 	}
 }
 
