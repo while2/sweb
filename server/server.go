@@ -52,8 +52,12 @@ type Server struct {
 
 // Run the server listen and server at the addr with graceful shutdown supports.
 func (s *Server) Run(addr string) error {
+	timeout := kGracefulTimeout * time.Second
+	if s.debug {
+		timeout = 0
+	}
 	srv := &graceful.Server{
-		Timeout: kGracefulTimeout * time.Second,
+		Timeout: timeout,
 		Server: &http.Server{
 			Addr:    addr,
 			Handler: s.router,
