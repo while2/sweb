@@ -41,6 +41,7 @@ type Muxer interface {
 
 // Server is a struct for all kinds of internal data.
 type Server struct {
+	srv                *graceful.Server
 	baseCtx            context.Context
 	wares              []Middleware
 	router             *httprouter.Router
@@ -65,6 +66,10 @@ func (s *Server) Run(addr string) error {
 	}
 	log.Infof("Server is listening on %s", addr)
 	return srv.ListenAndServe()
+}
+
+func (s *Server) Stop(timeout time.Duration) {
+	s.srv.Stop(timeout)
 }
 
 // Middleware: Register a middleware to a server object.
