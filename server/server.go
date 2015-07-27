@@ -57,7 +57,7 @@ func (s *Server) Run(addr string) error {
 	if s.debug {
 		timeout = 0
 	}
-	srv := &graceful.Server{
+	s.srv = &graceful.Server{
 		Timeout: timeout,
 		Server: &http.Server{
 			Addr:    addr,
@@ -65,7 +65,7 @@ func (s *Server) Run(addr string) error {
 		},
 	}
 	log.Infof("Server is listening on %s", addr)
-	return srv.ListenAndServe()
+	return s.srv.ListenAndServe()
 }
 
 func (s *Server) Stop(timeout time.Duration) {
