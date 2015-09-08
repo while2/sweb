@@ -46,6 +46,7 @@ type Server struct {
 	wares              []Middleware
 	router             *httprouter.Router
 	extraAssetsMapping map[string]string
+	extraAssetsJson    string
 	namedRoutes        map[string]string
 	restfulAdapter     RestfulHandlerAdapter
 	debug              bool
@@ -150,6 +151,9 @@ func (s *Server) DefaultRouteFuncs() template.FuncMap {
 func (s *Server) hrAdapt(fn Handler) httprouter.Handle {
 	core := func(ctx context.Context, w http.ResponseWriter, r *http.Request, next Handler) context.Context {
 		// we are inside the onion core, so the next would be ignored
+		if s.debug {
+			s.loadJsonAssetsMapping()
+		}
 		return fn(ctx, w, r)
 	}
 	handler := buildOnion(append(s.wares, MiddleFn(core)))

@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -17,6 +19,24 @@ const (
 // server would look up this mapping for the frontend assets first when reverse an assets url.
 func (s *Server) EnableExtraAssetsMapping(assetsMapping map[string]string) {
 	s.extraAssetsMapping = assetsMapping
+}
+
+func (s *Server) EnableExtraAssetsJson(jsonFile string) {
+	s.extraAssetsJson = jsonFile
+	s.loadJsonAssetsMapping()
+}
+
+func (s *Server) loadJsonAssetsMapping() {
+	if s.extraAssetsJson == "" {
+		return
+	}
+	if data, err := ioutil.ReadFile(s.extraAssetsJson); err == nil {
+		mapping := make(map[string]string)
+		if err := json.Unmarshal(data, &mapping); err == nil {
+			s.extraAssetsMapping = mapping
+			log.Debugf("Server extra assets loaded from json file: %s", s.extraAssetsJson)
+		}
+	}
 }
 
 // Reverse would reverse the named routes with params supported. E.g. we have a routes "/hello/:name" named "Hello",
