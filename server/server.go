@@ -47,6 +47,7 @@ type Server struct {
 	router             *httprouter.Router
 	extraAssetsMapping map[string]string
 	extraAssetsJson    string
+	assetsPrefix       string
 	namedRoutes        map[string]string
 	restfulAdapter     RestfulHandlerAdapter
 	debug              bool

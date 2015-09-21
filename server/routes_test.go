@@ -20,6 +20,7 @@ type RCase struct {
 func TestRouterFuncs(t *testing.T) {
 	ctx := context.Background()
 	srv := New(ctx, true)
+	srv.EnableAssetsPrefix("http://example.com")
 	srv.Get("/", "Index", DummyHandle)
 	srv.Get("/p1/:name", "Param1", DummyHandle)
 	srv.Get("/p2/:name/:and", "Param2", DummyHandle)
@@ -45,7 +46,7 @@ func TestRouterFuncs(t *testing.T) {
 		}
 	}
 
-	if urlPath := srv.Assets("images/test.png"); urlPath != "/assets/images/test.png" {
+	if urlPath := srv.Assets("images/test.png"); urlPath != "http://example.com/assets/images/test.png" {
 		t.Errorf("Wrong result from assets, expected=/assets/images/test.png, got=%s", urlPath)
 	}
 }

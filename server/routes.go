@@ -26,6 +26,11 @@ func (s *Server) EnableExtraAssetsJson(jsonFile string) {
 	s.loadJsonAssetsMapping()
 }
 
+// EnableAssetsPrefix can be used to add assets prefix for assets reverse, like CDN host name.
+func (s *Server) EnableAssetsPrefix(prefix string) {
+	s.assetsPrefix = prefix
+}
+
 func (s *Server) loadJsonAssetsMapping() {
 	if s.extraAssetsJson == "" {
 		return
@@ -72,7 +77,7 @@ func (s *Server) Assets(path string) string {
 	if asset, ok := s.extraAssetsMapping[path]; ok {
 		path = asset
 	}
-	return s.Reverse(kAssetsReverseKey, path)
+	return fmt.Sprintf("%s%s", s.assetsPrefix, s.Reverse(kAssetsReverseKey, path))
 }
 
 // Files register the static file system or assets to the router
