@@ -37,6 +37,7 @@ type Muxer interface {
 	Patch(path, name string, handle Handler)
 	Delete(path, name string, handle Handler)
 	Head(path, name string, handle Handler)
+	Params(ctx context.Context, key string) string
 }
 
 // Server is a struct for all kinds of internal data.
