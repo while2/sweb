@@ -82,6 +82,24 @@ func (s *Server) Assets(path string) string {
 
 // Files register the static file system or assets to the router
 func (s *Server) Files(path string, root http.FileSystem) {
-	s.router.ServeFiles(path, root)
 	s.namedRoutes[kAssetsReverseKey] = path
+	s.router.ServeFiles(path, root)
+}
+
+// Use FileHandlerHook to alter Response header or something
+type FileHandlerHook func(w http.ResponseWriter, r *http.Request)
+
+func (s *Server) FilesWithHook(path string, root http.FileSystem, hook FileHandlerHook) {
+	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
+		panic("path must end with /*filepath in path '" + path + "'")
+	}
+
+	s.namedRoutes[kAssetsReverseKey] = path
+
+	fileServer := http.FileServer(root)
+	s.router.GET(path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		r.URL.Path = ps.ByName("filepath")
+		hook(w, r)
+		fileServer.ServeHTTP(w, r)
+	})
 }
