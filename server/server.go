@@ -74,6 +74,11 @@ func (s *Server) Stop(timeout time.Duration) {
 	s.srv.Stop(timeout)
 }
 
+// EnableAssetsPrefix can be used to add assets prefix for assets reverse, like CDN host name.
+func (s *Server) EnableAssetsPrefix(prefix string) {
+	s.assetsPrefix = prefix
+}
+
 // Middleware: Register a middleware to a server object.
 func (s *Server) Middleware(ware Middleware) {
 	s.wares = append(s.wares, ware)
